@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Сервис для курьеров · Прототип</title>
+  <style>
+    :root {
+      color-scheme: only light;
+      --bg: #f5f6f8;
+      --surface: #ffffff;
+      --surface-alt: #f0f3f7;
+      --border: #d9dce3;
+      --text: #1f2a3d;
+      --muted: #6b778c;
+      --accent: #2b63ff;
+      --danger: #ff5c5c;
+      --success: #1f9d6a;
+      font-size: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+
+    body {
+      font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    #app {
+      height: 100vh;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header.app-header {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .app-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      flex: 1 1 auto;
+      min-width: 200px;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    button,
+    .toolbar label {
+      font: inherit;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 10px 18px;
+      background: var(--surface-alt);
+      color: var(--text);
+      cursor: pointer;
+      transition: background 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    button.primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    button.danger {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    button:not(:disabled):hover {
+      box-shadow: 0 6px 16px rgba(43, 99, 255, 0.16);
+    }
+
+    .file-input {
+      position: relative;
+      overflow: hidden;
+      display: inline-flex;
+      border-radius: 999px;
+      background: var(--surface-alt);
+    }
+
+    .file-input input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .file-input span {
+      padding: 10px 18px;
+      pointer-events: none;
+      display: inline-block;
+    }
+
+    .banner {
+      background: #fff6d7;
+      border-bottom: 1px solid #ffe3a3;
+      padding: 10px 24px;
+      color: #775400;
+      font-weight: 600;
+      display: none;
+    }
+
+    .banner.show {
+      display: block;
+    }
+
+    .filters-panel {
+      padding: 14px 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 200px;
+    }
+
+    .filter-group label {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .filter-group select,
+    .filter-group input {
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      background: var(--surface);
+      font: inherit;
+      transition: border 0.2s ease;
+      width: 100%;
+    }
+
+    .table-wrapper {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      padding: 16px 24px 24px;
+    }
+
+    .table-scroll {
+      width: 100%;
+      border-radius: 16px;
+      background: var(--surface);
+      box-shadow: 0 18px 46px rgba(31, 46, 87, 0.08);
+      overflow: auto;
+      display: block;
+    }
+
+    table {
+      border-collapse: separate;
+      border-spacing: 0;
+      width: 100%;
+      min-width: 1100px;
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 12px;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      text-align: left;
+      z-index: 2;
+    }
+
+    tbody tr {
+      transition: background 0.2s ease;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #fafbff;
+    }
+
+    tbody td {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .checkbox-cell {
+      text-align: center;
+      width: 40px;
+    }
+
+    input[type="text"],
+    input[type="datetime-local"],
+    select,
+    textarea {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      background: var(--surface-alt);
+      font: inherit;
+      transition: border 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(43, 99, 255, 0.15);
+    }
+
+    .search-dropdown {
+      position: relative;
+    }
+
+    .search-dropdown-input {
+      cursor: pointer;
+    }
+
+    .search-dropdown.open .search-dropdown-list {
+      display: block;
+    }
+
+    .search-dropdown-list {
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      width: 100%;
+      max-height: 220px;
+      overflow: auto;
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      box-shadow: 0 16px 32px rgba(31, 42, 61, 0.18);
+      z-index: 20;
+    }
+
+    .search-dropdown-item,
+    .search-dropdown-empty {
+      padding: 10px 12px;
+      cursor: pointer;
+    }
+
+    .search-dropdown-item:hover,
+    .search-dropdown-item.highlighted {
+      background: rgba(43, 99, 255, 0.12);
+    }
+
+    .address-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .address-status {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .address-status.invalid {
+      color: var(--danger);
+      font-weight: 600;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .badge-urgent {
+      background: rgba(255, 92, 92, 0.15);
+      color: var(--danger);
+    }
+
+    .badge-regular {
+      background: rgba(43, 99, 255, 0.12);
+      color: var(--accent);
+    }
+
+    .badge-status-work {
+      background: rgba(255, 165, 0, 0.18);
+      color: #c05a00;
+    }
+
+    .badge-status-created {
+      background: rgba(43, 99, 255, 0.12);
+      color: var(--accent);
+    }
+
+    .badge-status-done {
+      background: rgba(31, 157, 106, 0.12);
+      color: var(--success);
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .actions button {
+      padding: 8px 12px;
+      border-radius: 12px;
+      background: var(--surface-alt);
+      font-size: 0.85rem;
+    }
+
+    .actions button.print {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .table-scroll::-webkit-scrollbar,
+    .search-dropdown-list::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    .table-scroll::-webkit-scrollbar-thumb,
+    .search-dropdown-list::-webkit-scrollbar-thumb {
+      background: rgba(31, 46, 87, 0.25);
+      border-radius: 999px;
+    }
+
+    .table-scroll {
+      scrollbar-width: thin;
+    }
+
+    .empty-placeholder {
+      padding: 32px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .status-group-title {
+      padding: 12px;
+      font-weight: 600;
+      background: #f7f8fb;
+      border-bottom: 1px solid var(--border);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+    }
+
+    tr.status-group-row td {
+      background: #f0f3f7;
+      border-bottom: none;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+    }
+
+    @media (max-width: 1200px) {
+      thead,
+      tbody tr {
+        font-size: 0.85rem;
+      }
+
+      .filter-group {
+        min-width: 160px;
+      }
+    }
+
+    @media (max-width: 900px) {
+      header.app-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .toolbar {
+        width: 100%;
+      }
+
+      tbody tr {
+        font-size: 0.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header class="app-header">
+      <div class="app-title">Сервис для курьеров · Прототип</div>
+      <div class="toolbar">
+        <button class="primary" id="btn-add">+ Добавить задачу</button>
+        <button id="btn-duplicate-selected">Дублировать выбранные</button>
+        <button class="danger" id="btn-delete-selected">Удалить выбранные</button>
+        <button id="btn-print-selected">Печать выбранных</button>
+        <button id="btn-export">Сохранить</button>
+        <label class="file-input">
+          <input type="file" id="btn-import" accept="application/json" />
+          <span>Загрузить</span>
+        </label>
+      </div>
+    </header>
+    <div class="banner" id="yandex-banner">Подсказки адресов отключены — вставьте API-ключ Яндекс.Карт в CONFIG.</div>
+    <section class="filters-panel">
+      <div class="filter-group">
+        <label for="filter-status">Статус</label>
+        <select id="filter-status">
+          <option value="all">Все</option>
+          <option value="В работе">В работе</option>
+          <option value="Создано">Создано</option>
+          <option value="Выполнено">Выполнено</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="filter-manager">Менеджер</label>
+        <input type="text" id="filter-manager" placeholder="Фильтр по менеджеру" />
+      </div>
+      <div class="filter-group" style="flex:1 1 240px; min-width: 240px;">
+        <label for="filter-search">Поиск</label>
+        <input type="text" id="filter-search" placeholder="Адрес, компания или задание" />
+      </div>
+    </section>
+    <div class="table-wrapper">
+      <div class="table-scroll" id="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th class="checkbox-cell"><input type="checkbox" id="select-all" /></th>
+              <th>Менеджер</th>
+              <th>Задание</th>
+              <th>Когда выполнить</th>
+              <th>Адрес</th>
+              <th>Компания</th>
+              <th>Телефон</th>
+              <th>Имя получателя</th>
+              <th>Срочность</th>
+              <th>Статус</th>
+              <th>Курьер</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+          <tbody id="tasks-body"></tbody>
+        </table>
+        <div class="empty-placeholder" id="empty-placeholder" style="display: none;">Нет задач — добавьте первую задачу.</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-vFL0n+UXOcDSBx/6CkXbkqVKgf/mBlC9ZwTe74MkRUYw35vj0IadB1iKsFcfoTmyaKOA1NVuMcZV8K4D9o3v0w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdn.jsdelivr.net/npm/inputmask@5.0.8/dist/inputmask.min.js" integrity="sha256-8XTur2qxGn8pY/+bexdFv+DE5jBqFaUG2RgxN6E466w=" crossorigin="anonymous"></script>
+  <script>
+    const CONFIG = {
+      yandexApiKey: 'PLACEHOLDER_YANDEX_API_KEY',
+      zoom: 14,
+      statusOrder: ['В работе', 'Создано', 'Выполнено'],
+      managers: [
+        'Алферов Дмитрий','Алферов Роман','Бондаренко Сергей','Бужор Виталий','Бичевин Михаил','Витковский Евгений','Волков Дмитрий','Гусев Роман','Гусев Юрий','Гученко Иван','Джгаркава Варлам','Зуева Ксения','Ильин Александр','Кленин Евгений','Клименков Михайил','Кочергин Георгий','Кретов Максим','Макурин Дмитрий','Пронский Денис','Рыков Александр','Рябов Иван','Сергеев Лев','Сотникова Анастасия','Трифонов Антон','Хорошавина Анна','Черёмухин Андрей','Власов Максим','Быркина Екатерина','Быркина Марианна','Панаева Татьяна','Гузенко Екатерина','Белан Мария','Алина Головлева','Настя Бикулова','Роман Журавлев'
+      ],
+      couriers: ['Павлушкий Юрий','Тарунтаев Игорь','Волошин Евгений','Джгаркава Александр']
+    };
+
+    const STORAGE_KEY = 'courier_tasks_v1';
+    const hasYandexKey = CONFIG.yandexApiKey && CONFIG.yandexApiKey !== 'PLACEHOLDER_YANDEX_API_KEY';
+    const yandexBanner = document.getElementById('yandex-banner');
+    if (!hasYandexKey) {
+      yandexBanner.classList.add('show');
+    }
+
+    const state = {
+      tasks: [],
+      filters: {
+        status: 'all',
+        manager: '',
+        search: ''
+      },
+      ymapsReady: null
+    };
+
+    const nowISO = () => new Date().toISOString();
+    const uid = () => 'task-' + Math.random().toString(36).slice(2, 9) + Date.now().toString(36);
+
+    function loadFromStorage() {
+      try {
+        const data = localStorage.getItem(STORAGE_KEY);
+        if (!data) return [];
+        const parsed = JSON.parse(data);
+        if (!Array.isArray(parsed)) return [];
+        return parsed.map(normalizeTask).filter(Boolean);
+      } catch (err) {
+        console.error('Ошибка чтения данных', err);
+        return [];
+      }
+    }
+
+    function saveToStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state.tasks));
+      } catch (err) {
+        console.error('Ошибка сохранения', err);
+      }
+    }
+
+    function normalizeTask(task) {
+      if (!task || typeof task !== 'object') return null;
+      return {
+        id: task.id || uid(),
+        selected: Boolean(task.selected),
+        manager: task.manager || '',
+        task: task.task || '',
+        dueAt: task.dueAt || '',
+        addressText: task.addressText || '',
+        coords: task.coords && typeof task.coords === 'object' && isFinite(task.coords.lat) && isFinite(task.coords.lon)
+          ? { lat: Number(task.coords.lat), lon: Number(task.coords.lon) }
+          : null,
+        company: task.company || '',
+        phone: task.phone || '',
+        recipient: task.recipient || '',
+        urgency: task.urgency === 'Срочно' ? 'Срочно' : 'По графику',
+        status: CONFIG.statusOrder.includes(task.status) ? task.status : 'Создано',
+        courier: task.courier || '',
+        createdAt: task.createdAt || nowISO(),
+        updatedAt: task.updatedAt || nowISO()
+      };
+    }
+
+    function getFilteredTasks() {
+      const { status, manager, search } = state.filters;
+      const searchLower = search.trim().toLowerCase();
+      const managerLower = manager.trim().toLowerCase();
+      const filtered = state.tasks.filter(task => {
+        if (status !== 'all' && task.status !== status) return false;
+        if (managerLower && !task.manager.toLowerCase().includes(managerLower)) return false;
+        if (searchLower) {
+          const text = [task.addressText, task.company, task.task].join(' ').toLowerCase();
+          if (!text.includes(searchLower)) return false;
+        }
+        return true;
+      });
+      const groups = CONFIG.statusOrder.map(statusName => {
+        return filtered
+          .filter(task => task.status === statusName)
+          .sort((a, b) => {
+            if (!a.dueAt && !b.dueAt) return 0;
+            if (!a.dueAt) return 1;
+            if (!b.dueAt) return -1;
+            return new Date(a.dueAt) - new Date(b.dueAt);
+          });
+      });
+      return groups.flat();
+    }
+
+    function isTaskPrintable(task) {
+      const requiredFields = ['manager', 'task', 'dueAt', 'addressText', 'company', 'phone', 'recipient', 'urgency', 'status', 'courier'];
+      const allFilled = requiredFields.every(key => {
+        const value = task[key];
+        return value !== undefined && value !== null && String(value).trim().length > 0;
+      });
+      return allFilled && !!(task.coords && isFinite(task.coords.lat) && isFinite(task.coords.lon));
+    }
+
+    function anyVisibleTasks() {
+      return getFilteredTasks().length > 0;
+    }
+
+    function updateSelectAllCheckbox() {
+      const visible = getFilteredTasks();
+      const allSelected = visible.length > 0 && visible.every(task => task.selected);
+      const anySelected = visible.some(task => task.selected);
+      const selectAll = document.getElementById('select-all');
+      selectAll.checked = allSelected;
+      selectAll.indeterminate = !allSelected && anySelected;
+    }
+
+    function setTaskValue(task, key, value, shouldRender = false) {
+      task[key] = value;
+      task.updatedAt = nowISO();
+      saveToStorage();
+      if (shouldRender) {
+        render();
+      } else {
+        updatePrintButtonState();
+        updateSelectAllCheckbox();
+      }
+    }
+
+    function attachPhoneMask(input) {
+      if (!window.Inputmask) return;
+      const mask = new Inputmask('+7 (999) 999-99-99');
+      mask.mask(input);
+    }
+
+    // Searchable dropdown component
+    function createSearchDropdown({ value, options, placeholder, onChange }) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'search-dropdown';
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = value || '';
+      input.placeholder = placeholder;
+      input.className = 'search-dropdown-input';
+
+      const list = document.createElement('div');
+      list.className = 'search-dropdown-list';
+
+      let filtered = options.slice();
+      let highlightedIndex = -1;
+
+      function renderList() {
+        list.innerHTML = '';
+        filtered = options.filter(opt => opt.toLowerCase().includes(input.value.toLowerCase()));
+        if (!filtered.length) {
+          const empty = document.createElement('div');
+          empty.className = 'search-dropdown-empty';
+          empty.textContent = 'Не найдено';
+          list.appendChild(empty);
+          return;
+        }
+        filtered.forEach((opt, idx) => {
+          const item = document.createElement('div');
+          item.className = 'search-dropdown-item' + (idx === highlightedIndex ? ' highlighted' : '');
+          item.textContent = opt;
+          item.addEventListener('mousedown', evt => {
+            evt.preventDefault();
+            choose(opt);
+          });
+          list.appendChild(item);
+        });
+      }
+
+      function openList() {
+        wrapper.classList.add('open');
+        highlightedIndex = filtered.findIndex(opt => opt === input.value);
+        renderList();
+      }
+
+      function closeList() {
+        wrapper.classList.remove('open');
+        highlightedIndex = -1;
+      }
+
+      function choose(val) {
+        input.value = val;
+        closeList();
+        onChange(val);
+      }
+
+      input.addEventListener('focus', () => {
+        openList();
+      });
+
+      input.addEventListener('input', () => {
+        openList();
+      });
+
+      input.addEventListener('keydown', e => {
+        if (!wrapper.classList.contains('open')) return;
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          highlightedIndex = Math.min(filtered.length - 1, highlightedIndex + 1);
+          updateHighlight();
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          highlightedIndex = Math.max(0, highlightedIndex - 1);
+          updateHighlight();
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          if (filtered[highlightedIndex]) {
+            choose(filtered[highlightedIndex]);
+          } else if (filtered.length === 1) {
+            choose(filtered[0]);
+          }
+        } else if (e.key === 'Escape') {
+          closeList();
+        }
+      });
+
+      input.addEventListener('blur', () => {
+        setTimeout(() => closeList(), 150);
+      });
+
+      function updateHighlight() {
+        const items = Array.from(list.querySelectorAll('.search-dropdown-item'));
+        items.forEach((item, idx) => {
+          if (idx === highlightedIndex) {
+            item.classList.add('highlighted');
+            item.scrollIntoView({ block: 'nearest' });
+          } else {
+            item.classList.remove('highlighted');
+          }
+        });
+      }
+
+      wrapper.appendChild(input);
+      wrapper.appendChild(list);
+      return { wrapper, input, openList, closeList, renderList };
+    }
+
+    // Address field with validation & Yandex suggest
+    function createAddressField(task) {
+      const container = document.createElement('div');
+      container.className = 'address-field';
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = 'Введите адрес...';
+      input.value = task.addressText || '';
+
+      const status = document.createElement('div');
+      status.className = 'address-status';
+
+      function updateStatus() {
+        if (task.coords && task.addressText) {
+          status.textContent = 'Адрес подтверждён';
+          status.classList.remove('invalid');
+        } else {
+          status.textContent = 'Выберите адрес из подсказок';
+          status.classList.add('invalid');
+        }
+      }
+
+      input.addEventListener('input', () => {
+        task.coords = null;
+        setTaskValue(task, 'addressText', input.value.trim());
+        updateStatus();
+      });
+      input.addEventListener('blur', () => render());
+
+      container.appendChild(input);
+      container.appendChild(status);
+      updateStatus();
+
+      if (hasYandexKey) {
+        ensureYmaps().then(() => {
+          const suggestView = new ymaps.SuggestView(input, { results: 10 });
+          suggestView.events.add('select', function (e) {
+            const value = e.get('item').value;
+            setTaskValue(task, 'addressText', value);
+            input.value = value;
+            geocodeAddress(value).then(coords => {
+              if (coords) {
+                task.coords = coords;
+                task.updatedAt = nowISO();
+                saveToStorage();
+                updateStatus();
+                updatePrintButtonState();
+              } else {
+                task.coords = null;
+                updateStatus();
+                updatePrintButtonState();
+              }
+            });
+          });
+        });
+      }
+
+      return container;
+    }
+
+    function ensureYmaps() {
+      if (!hasYandexKey) return Promise.reject(new Error('No key'));
+      if (state.ymapsReady) return state.ymapsReady;
+      state.ymapsReady = new Promise((resolve, reject) => {
+        const check = () => {
+          if (window.ymaps && ymaps.SuggestView) {
+            ymaps.ready(() => resolve());
+          } else {
+            setTimeout(check, 200);
+          }
+        };
+        check();
+      });
+      return state.ymapsReady;
+    }
+
+    function geocodeAddress(address) {
+      if (!window.ymaps) return Promise.resolve(null);
+      return ymaps.geocode(address).then(res => {
+        const geoObject = res.geoObjects.get(0);
+        if (!geoObject) return null;
+        const coords = geoObject.geometry.getCoordinates();
+        return { lat: coords[1], lon: coords[0] };
+      }).catch(err => {
+        console.warn('Геокодирование не удалось', err);
+        return null;
+      });
+    }
+
+    function renderTasks() {
+      const tbody = document.getElementById('tasks-body');
+      const placeholder = document.getElementById('empty-placeholder');
+      tbody.innerHTML = '';
+      const tasks = getFilteredTasks();
+      placeholder.style.display = tasks.length ? 'none' : 'block';
+      const fragment = document.createDocumentFragment();
+      let currentStatus = null;
+      tasks.forEach(task => {
+        if (currentStatus !== task.status) {
+          currentStatus = task.status;
+          const groupRow = document.createElement('tr');
+          groupRow.className = 'status-group-row';
+          const cell = document.createElement('td');
+          cell.colSpan = 12;
+          cell.className = 'status-group-title';
+          cell.textContent = currentStatus;
+          groupRow.appendChild(cell);
+          fragment.appendChild(groupRow);
+        }
+        fragment.appendChild(renderTaskRow(task));
+      });
+      tbody.appendChild(fragment);
+      updateSelectAllCheckbox();
+      updatePrintButtonState();
+    }
+
+    function renderTaskRow(task) {
+      const row = document.createElement('tr');
+      row.dataset.id = task.id;
+
+      // Selection checkbox
+      const selectCell = document.createElement('td');
+      selectCell.className = 'checkbox-cell';
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = !!task.selected;
+      checkbox.addEventListener('change', () => {
+        setTaskValue(task, 'selected', checkbox.checked);
+      });
+      selectCell.appendChild(checkbox);
+      row.appendChild(selectCell);
+
+      // Manager dropdown
+      const managerCell = document.createElement('td');
+      const managerDropdown = createSearchDropdown({
+        value: task.manager,
+        options: CONFIG.managers,
+        placeholder: 'Выберите менеджера',
+        onChange: val => setTaskValue(task, 'manager', val, true)
+      });
+      managerDropdown.input.addEventListener('blur', () => {
+        if (!CONFIG.managers.includes(managerDropdown.input.value)) {
+          managerDropdown.input.value = task.manager;
+        }
+      });
+      managerCell.appendChild(managerDropdown.wrapper);
+      row.appendChild(managerCell);
+
+      // Task text
+      const taskCell = document.createElement('td');
+      const taskInput = document.createElement('textarea');
+      taskInput.rows = 2;
+      taskInput.value = task.task;
+      taskInput.placeholder = 'Опишите задание';
+      taskInput.addEventListener('input', () => {
+        setTaskValue(task, 'task', taskInput.value.trim());
+      });
+      taskInput.addEventListener('blur', () => render());
+      taskCell.appendChild(taskInput);
+      row.appendChild(taskCell);
+
+      // Due date
+      const dueCell = document.createElement('td');
+      const dueInput = document.createElement('input');
+      dueInput.type = 'datetime-local';
+      dueInput.value = task.dueAt ? task.dueAt.slice(0, 16) : '';
+      dueInput.addEventListener('change', () => {
+        setTaskValue(task, 'dueAt', dueInput.value, true);
+      });
+      dueCell.appendChild(dueInput);
+      row.appendChild(dueCell);
+
+      // Address
+      const addressCell = document.createElement('td');
+      const addressField = createAddressField(task);
+      addressCell.appendChild(addressField);
+      row.appendChild(addressCell);
+
+      // Company
+      const companyCell = document.createElement('td');
+      const companyInput = document.createElement('input');
+      companyInput.type = 'text';
+      companyInput.value = task.company;
+      companyInput.placeholder = 'Компания';
+      companyInput.addEventListener('input', () => {
+        setTaskValue(task, 'company', companyInput.value.trim());
+      });
+      companyInput.addEventListener('blur', () => render());
+      companyCell.appendChild(companyInput);
+      row.appendChild(companyCell);
+
+      // Phone
+      const phoneCell = document.createElement('td');
+      const phoneInput = document.createElement('input');
+      phoneInput.type = 'text';
+      phoneInput.value = task.phone;
+      phoneInput.placeholder = '+7 (___) ___-__-__';
+      phoneInput.addEventListener('input', () => {
+        setTaskValue(task, 'phone', phoneInput.value.trim());
+      });
+      phoneCell.appendChild(phoneInput);
+      row.appendChild(phoneCell);
+      attachPhoneMask(phoneInput);
+
+      // Recipient
+      const recipientCell = document.createElement('td');
+      const recipientInput = document.createElement('input');
+      recipientInput.type = 'text';
+      recipientInput.value = task.recipient;
+      recipientInput.placeholder = 'Получатель';
+      recipientInput.addEventListener('input', () => {
+        setTaskValue(task, 'recipient', recipientInput.value.trim());
+      });
+      recipientCell.appendChild(recipientInput);
+      row.appendChild(recipientCell);
+
+      // Urgency
+      const urgencyCell = document.createElement('td');
+      const urgencySelect = document.createElement('select');
+      ['Срочно', 'По графику'].forEach(option => {
+        const opt = document.createElement('option');
+        opt.value = option;
+        opt.textContent = option;
+        if (task.urgency === option) opt.selected = true;
+        urgencySelect.appendChild(opt);
+      });
+      urgencySelect.addEventListener('change', () => {
+        setTaskValue(task, 'urgency', urgencySelect.value);
+      });
+      urgencyCell.appendChild(urgencySelect);
+      row.appendChild(urgencyCell);
+
+      // Status
+      const statusCell = document.createElement('td');
+      const statusSelect = document.createElement('select');
+      CONFIG.statusOrder.forEach(option => {
+        const opt = document.createElement('option');
+        opt.value = option;
+        opt.textContent = option;
+        if (task.status === option) opt.selected = true;
+        statusSelect.appendChild(opt);
+      });
+      statusSelect.addEventListener('change', () => {
+        setTaskValue(task, 'status', statusSelect.value, true);
+      });
+      statusCell.appendChild(statusSelect);
+      row.appendChild(statusCell);
+
+      // Courier dropdown
+      const courierCell = document.createElement('td');
+      const courierDropdown = createSearchDropdown({
+        value: task.courier,
+        options: CONFIG.couriers,
+        placeholder: 'Назначьте курьера',
+        onChange: val => setTaskValue(task, 'courier', val)
+      });
+      courierDropdown.input.addEventListener('blur', () => {
+        if (!CONFIG.couriers.includes(courierDropdown.input.value)) {
+          courierDropdown.input.value = task.courier;
+        }
+      });
+      courierCell.appendChild(courierDropdown.wrapper);
+      row.appendChild(courierCell);
+
+      // Actions
+      const actionsCell = document.createElement('td');
+      const actions = document.createElement('div');
+      actions.className = 'actions';
+      const printBtn = document.createElement('button');
+      printBtn.textContent = 'Печать';
+      printBtn.className = 'print';
+      printBtn.disabled = !isTaskPrintable(task);
+      printBtn.addEventListener('click', () => handlePrintTasks([task]));
+
+      const duplicateBtn = document.createElement('button');
+      duplicateBtn.textContent = 'Дублировать';
+      duplicateBtn.addEventListener('click', () => duplicateTasks([task]));
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.textContent = 'Удалить';
+      deleteBtn.className = 'danger';
+      deleteBtn.addEventListener('click', () => deleteTasks([task.id]));
+
+      actions.appendChild(printBtn);
+      actions.appendChild(duplicateBtn);
+      actions.appendChild(deleteBtn);
+      actionsCell.appendChild(actions);
+      row.appendChild(actionsCell);
+
+      return row;
+    }
+
+    function updatePrintButtonState() {
+      const printSelectedBtn = document.getElementById('btn-print-selected');
+      const selectedTasks = state.tasks.filter(task => task.selected);
+      const anySelected = selectedTasks.length > 0;
+      const allPrintable = selectedTasks.every(isTaskPrintable);
+      printSelectedBtn.disabled = !(anySelected && allPrintable);
+      const tableRows = document.querySelectorAll('#tasks-body tr');
+      tableRows.forEach(row => {
+        const taskId = row.dataset.id;
+        if (!taskId) return;
+        const task = state.tasks.find(t => t.id === taskId);
+        const btn = row.querySelector('button.print');
+        if (btn) {
+          btn.disabled = !isTaskPrintable(task);
+        }
+      });
+    }
+
+    function addTask() {
+      const now = nowISO();
+      const task = {
+        id: uid(),
+        selected: false,
+        manager: '',
+        task: '',
+        dueAt: '',
+        addressText: '',
+        coords: null,
+        company: '',
+        phone: '',
+        recipient: '',
+        urgency: 'По графику',
+        status: 'Создано',
+        courier: '',
+        createdAt: now,
+        updatedAt: now
+      };
+      state.tasks.push(task);
+      saveToStorage();
+      render();
+    }
+
+    function duplicateTasks(tasksToDuplicate) {
+      tasksToDuplicate.forEach(task => {
+        const copy = normalizeTask({ ...task, id: uid(), selected: false, createdAt: nowISO(), updatedAt: nowISO() });
+        state.tasks.push(copy);
+      });
+      saveToStorage();
+      render();
+    }
+
+    function deleteTasks(ids) {
+      if (!ids.length) return;
+      state.tasks = state.tasks.filter(task => !ids.includes(task.id));
+      saveToStorage();
+      render();
+    }
+
+    function handlePrintTasks(tasks) {
+      if (!tasks.length) return;
+      const printable = tasks.filter(isTaskPrintable);
+      if (!printable.length) {
+        alert('Выберите задачи с заполненными данными и подтверждённым адресом.');
+        return;
+      }
+      generatePdf(printable);
+    }
+
+    async function generatePdf(tasks) {
+      const { jsPDF } = window.jspdf || {};
+      if (!jsPDF) {
+        alert('jsPDF не загружен. Проверьте подключение CDN.');
+        return;
+      }
+      const doc = new jsPDF({ format: 'a4', unit: 'pt', orientation: 'portrait' });
+      for (let index = 0; index < tasks.length; index++) {
+        const task = tasks[index];
+        if (index > 0) doc.addPage();
+        await renderTaskPage(doc, task);
+      }
+      doc.save('tasks.pdf');
+    }
+
+    async function renderTaskPage(doc, task) {
+      const margin = 48;
+      let y = margin;
+      const lineHeight = 18;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(20);
+      doc.text('Наряд курьера', margin, y);
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+      const generatedAt = new Date();
+      doc.text('Сформировано: ' + generatedAt.toLocaleString('ru-RU'), margin, y + 24);
+      y += 52;
+
+      const infoLines = [
+        ['Менеджер', task.manager],
+        ['Задание', task.task],
+        ['Когда выполнить', task.dueAt ? new Date(task.dueAt).toLocaleString('ru-RU') : '—'],
+        ['Адрес', task.addressText],
+        ['Компания', task.company],
+        ['Телефон', task.phone],
+        ['Имя получателя', task.recipient],
+        ['Срочность', task.urgency],
+        ['Статус', task.status]
+      ];
+
+      infoLines.forEach(([label, value]) => {
+        doc.setFont('helvetica', 'bold');
+        doc.text(label + ':', margin, y);
+        doc.setFont('helvetica', 'normal');
+        const lines = doc.splitTextToSize(value || '—', 500);
+        doc.text(lines, margin + 110, y);
+        y += lineHeight * Math.max(1, lines.length);
+        y += 6;
+      });
+
+      if (task.coords) {
+        const mapUrl = getStaticMapUrl(task.coords.lat, task.coords.lon);
+        try {
+          const dataUrl = await fetchMapAsDataUrl(mapUrl);
+          const img = await loadImage(dataUrl);
+          const availableWidth = doc.internal.pageSize.getWidth() - margin * 2;
+          const ratio = img.height / img.width;
+          const imgWidth = availableWidth;
+          const imgHeight = imgWidth * ratio;
+          doc.addImage(img, 'PNG', margin, y, imgWidth, imgHeight);
+          y += imgHeight + 16;
+        } catch (err) {
+          doc.setTextColor(200, 0, 0);
+          doc.text('Не удалось загрузить карту. Откройте адрес по ссылке ниже.', margin, y);
+          doc.setTextColor(0, 0, 0);
+          y += lineHeight * 2;
+        }
+        doc.setTextColor(43, 99, 255);
+        doc.textWithLink('Открыть адрес в Яндекс.Картах', margin, y, {
+          url: getMapsLink(task.coords.lat, task.coords.lon)
+        });
+        doc.setTextColor(0, 0, 0);
+      }
+    }
+
+    function getStaticMapUrl(lat, lon) {
+      const params = new URLSearchParams({
+        ll: `${lon},${lat}`,
+        size: '600,600',
+        z: String(CONFIG.zoom),
+        l: 'map',
+        pt: `${lon},${lat},pm2rdm`
+      });
+      return `https://static-maps.yandex.ru/1.x/?${params.toString()}`;
+    }
+
+    function getMapsLink(lat, lon) {
+      return `https://yandex.ru/maps/?pt=${lon},${lat}&z=${CONFIG.zoom}&l=map`;
+    }
+
+    async function fetchMapAsDataUrl(url) {
+      const response = await fetch(url, { mode: 'cors' });
+      if (!response.ok) throw new Error('Response not OK');
+      const blob = await response.blob();
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    function loadImage(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+      });
+    }
+
+    function exportTasks() {
+      const dataStr = JSON.stringify(state.tasks, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'tasks.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function importTasks(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = event => {
+        try {
+          const parsed = JSON.parse(event.target.result);
+          if (!Array.isArray(parsed)) throw new Error('Ожидается массив задач');
+          const normalized = parsed.map(normalizeTask).filter(Boolean);
+          state.tasks = normalized;
+          saveToStorage();
+          render();
+        } catch (err) {
+          console.error(err);
+          alert('Не удалось импортировать файл: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function setupFilters() {
+      document.getElementById('filter-status').addEventListener('change', e => {
+        state.filters.status = e.target.value;
+        render();
+      });
+      document.getElementById('filter-manager').addEventListener('input', e => {
+        state.filters.manager = e.target.value;
+        render();
+      });
+      document.getElementById('filter-search').addEventListener('input', e => {
+        state.filters.search = e.target.value;
+        render();
+      });
+    }
+
+    function setupToolbar() {
+      document.getElementById('btn-add').addEventListener('click', addTask);
+      document.getElementById('btn-duplicate-selected').addEventListener('click', () => {
+        const selected = state.tasks.filter(task => task.selected);
+        if (!selected.length) {
+          alert('Выберите задачи для дублирования.');
+          return;
+        }
+        duplicateTasks(selected);
+      });
+      document.getElementById('btn-delete-selected').addEventListener('click', () => {
+        const selected = state.tasks.filter(task => task.selected);
+        if (!selected.length) {
+          alert('Нет выбранных задач.');
+          return;
+        }
+        if (confirm(`Удалить ${selected.length} выбранных задач?`)) {
+          deleteTasks(selected.map(task => task.id));
+        }
+      });
+      document.getElementById('btn-print-selected').addEventListener('click', () => {
+        const selected = state.tasks.filter(task => task.selected);
+        handlePrintTasks(selected);
+      });
+      document.getElementById('btn-export').addEventListener('click', exportTasks);
+      document.getElementById('btn-import').addEventListener('change', e => {
+        const [file] = e.target.files;
+        importTasks(file);
+        e.target.value = '';
+      });
+      document.getElementById('select-all').addEventListener('change', e => {
+        const visibleIds = new Set(getFilteredTasks().map(task => task.id));
+        state.tasks.forEach(task => {
+          if (visibleIds.has(task.id)) {
+            task.selected = e.target.checked;
+          }
+        });
+        saveToStorage();
+        render();
+      });
+    }
+
+    function updateTableHeight() {
+      const header = document.querySelector('.app-header');
+      const filters = document.querySelector('.filters-panel');
+      const banner = document.getElementById('yandex-banner');
+      const wrapper = document.querySelector('.table-scroll');
+      if (!wrapper) return;
+      const headerHeight = header ? header.offsetHeight : 0;
+      const filtersHeight = filters ? filters.offsetHeight : 0;
+      const bannerHeight = banner && banner.classList.contains('show') ? banner.offsetHeight : 0;
+      const padding = 40; // суммарный вертикальный паддинг .table-wrapper
+      const offset = headerHeight + filtersHeight + bannerHeight + padding;
+      wrapper.style.height = `calc(100vh - ${offset}px)`;
+    }
+
+    function render() {
+      renderTasks();
+      updateTableHeight();
+    }
+
+    function init() {
+      state.tasks = loadFromStorage();
+      setupFilters();
+      setupToolbar();
+      render();
+      if (hasYandexKey) {
+        const script = document.createElement('script');
+        script.src = `https://api-maps.yandex.ru/2.1/?apikey=${CONFIG.yandexApiKey}&lang=ru_RU&load=SuggestView,geocode`;
+        script.async = true;
+        script.onerror = () => {
+          console.error('Не удалось загрузить API Яндекс.Карт');
+        };
+        document.head.appendChild(script);
+      }
+      window.addEventListener('resize', updateTableHeight);
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
